@@ -5,8 +5,8 @@ PATH
       ancestry (~> 1.2.4)
       bootstrap-sass
       ckeditor_rails (~> 4.0.1.1)
-      jquery-rails (~> 2.0)
-      paperclip (~> 3.0.3)
+      jquery-rails (~> 2.2.0)
+      paperclip
       rails (>= 3.2.5, < 3.3.0)
       sass-rails
       term-ansicolor
@@ -95,7 +95,7 @@ GEM
     hike (1.2.1)
     i18n (0.6.1)
     journey (1.0.4)
-    jquery-rails (2.2.1)
+    jquery-rails (2.2.2)
       railties (>= 3.0, < 5.0)
       thor (>= 0.14, < 2.0)
     json (1.7.7)
@@ -122,11 +122,11 @@ GEM
     multi_json (1.6.1)
     mysql2 (0.3.11)
     nokogiri (1.5.5)
-    paperclip (3.0.4)
+    paperclip (3.4.2)
       activemodel (>= 3.0.0)
       activerecord (>= 3.0.0)
       activesupport (>= 3.0.0)
-      cocaine (>= 0.0.2)
+      cocaine (~> 0.5.0)
       mime-types
     polyglot (0.3.3)
     rack (1.4.5)
@@ -176,13 +176,15 @@ GEM
     sqlite3 (1.3.6)
     sqlite3-ruby (1.3.3)
       sqlite3 (>= 1.3.3)
-    term-ansicolor (1.0.7)
+    term-ansicolor (1.2.2)
+      tins (~> 0.8)
     thin (1.5.0)
       daemons (>= 1.0.9)
       eventmachine (>= 0.12.6)
       rack (>= 1.0.0)
     thor (0.17.0)
     tilt (1.3.3)
+    tins (0.8.0)
     treetop (1.4.12)
       polyglot
       polyglot (>= 0.3.1)
