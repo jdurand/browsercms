@@ -2,7 +2,7 @@
   <%= content_for :html_head do %>
     <script type="text/javascript">
       jQuery(function($){
-        var categoriesByType = <%= Cms::CategoryType.category_map.to_json %>
+        var categoriesByType = <%= raw Cms::CategoryType.category_map.to_json %>
         $("#cms_category_category_type_id").change(function(){
           $("#cms_category_parent_id option").remove()
           $.each(categoriesByType[$(this).val()], function(){        
