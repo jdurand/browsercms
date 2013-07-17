@@ -3,11 +3,15 @@
     <script type="text/javascript">
       jQuery(function($){
         var categoriesByType = <%= raw Cms::CategoryType.category_map.to_json %>
-        $("#cms_category_category_type_id").change(function(){
-          $("#cms_category_parent_id option").remove()
+        $("#category_category_type_id").change(function(){
+          $("#category_parent_id option").remove()
+          $("#category_parent_id").append($.createElement("option", ""))
           $.each(categoriesByType[$(this).val()], function(){        
-            $("#cms_category_parent_id").append($.createElement("option", this[0], {value: this[1]}))
+            $("#category_parent_id").append($.createElement("option", this[0], {value: this[1]}))
           })
+          $("#category_parent_id_container").remove()
+          $("#category_parent_id_input").remove()
+          $("#category_parent_id").selectbox()
         })
       })
     </script>
