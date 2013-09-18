@@ -29,8 +29,9 @@ class UsersController < Cms::ResourceController
     query.collect! { |q| "(#{q})"}
     conditions = conditions.unshift(query.join(" AND "))
     per_page = params[:per_page] || 10
-    
-    @users = User.paginate(:page => params[:page], :per_page => per_page, :include => :user_group_memberships, :conditions => conditions, :order => "first_name, last_name, email")
+
+    page_num = params[:page] ? params[:page].to_i : 1
+    @users = User.where(conditions).paginate(page: page_num, per_page: per_page).includes(:user_group_memberships).references(:user_group_memberships).order("first_name, last_name, email")
   end
 
   def change_password
@@ -38,7 +39,7 @@ class UsersController < Cms::ResourceController
   end
 
   def update_password
-    if user.update_attributes(params[:user])
+    if user.update_attributes(resource_params)
       flash[:notice] = "Password for '#{user.login}' was changed"
       redirect_to(current_user.able_to?(:administrate) ? users_path : user_path(user))
     else

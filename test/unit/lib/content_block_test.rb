@@ -5,6 +5,24 @@ class ContentBlockTest < ActiveSupport::TestCase
     @block = create(:html_block, :name => "Test", :publish_on_save => false)
   end
 
+  test ".content_module" do
+    assert_equal :core, Cms::HtmlBlock.content_module
+  end
+  test "#save returns false if validation fails" do
+    invalid_content = Cms::HtmlBlock.new
+    refute invalid_content.save
+    refute invalid_content.valid?
+  end
+
+  test "#update_attributes returns false if validation fails" do
+    valid = create(:html_block)
+    refute valid.update_attributes(name: nil)
+  end
+
+  test "portlet" do
+    assert_equal :core, Cms::Portlet.content_module
+  end
+
   def test_publishing
     assert_equal "Draft", @block.status_name
     assert !@block.published?
@@ -92,7 +110,9 @@ class SoftPublishingTest < ActiveSupport::TestCase
 
   test "find with deleted returns all records even marked as deleted" do
     @block.destroy
-    assert_not_nil Cms::HtmlBlock.find_with_deleted(@block.id)
+    deleted_block = Cms::HtmlBlock.find_with_deleted(id: @block.id)
+    assert_not_nil deleted_block
+    assert_equal @block.name, deleted_block.name
   end
 
   test "Marking as deleted should create a new record in the versions table" do
@@ -103,7 +123,7 @@ class SoftPublishingTest < ActiveSupport::TestCase
     assert_equal 2, deleted_block.versions.size
     assert_equal 2, deleted_block.version
     assert_equal 1, deleted_block.versions.first.version
-    assert_equal 2, Cms::HtmlBlock::Version.count(:conditions => {:original_record_id => @block.id})
+    assert_equal 2, Cms::HtmlBlock::Version.where(:original_record_id => @block.id).count
   end
 
   test "Count should exclude deleted records" do
@@ -212,7 +232,7 @@ class VersionedContentBlockConnectedToAPageTest < ActiveSupport::TestCase
   test "Adding a block to page" do
     refute @page.published?, "The page should not be published yet."
     assert_equal 2, @page.versions.size, "Should be two versions of the page"
-    pages = Cms::Page.connected_to(:connectable => @block, :version => @block.version).all
+    pages = Cms::Page.connected_to(:connectable => @block, :version => @block.version).to_a
     assert_equal [@page], pages, "The block should be connected to page"
   end
 
@@ -241,7 +261,7 @@ class VersionedContentBlockConnectedToAPageTest < ActiveSupport::TestCase
     assert_incremented page_version_count, Cms::Page::Version.count
     assert_match /^HtmlBlock #\d+ was Edited/, @page.draft.version_comment
 
-    conns = @block.connectors.all(:order => 'id')
+    conns = @block.connectors.order('id')
     assert_equal 2, conns.size
     assert_properties conns[0], :page => @page, :page_version => 2, :connectable => @block, :connectable_version => 1, :container => "main"
     assert_properties conns[1], :page => @page, :page_version => 3, :connectable => @block, :connectable_version => 2, :container => "main"
@@ -285,6 +305,9 @@ class NonVersionedContentBlockConnectedToAPageTest < ActiveSupport::TestCase
     reset(:page, :block)
   end
 
+
+
+
   def test_editing_connected_to_an_unpublished_page
     page_version_count = Cms::Page::Version.count
 
@@ -298,7 +321,7 @@ class NonVersionedContentBlockConnectedToAPageTest < ActiveSupport::TestCase
     assert_equal page_version_count, Cms::Page::Version.count
     assert !@page.published?
 
-    conns = Cms::Connector.for_connectable(@block).all(:order => 'id')
+    conns = Cms::Connector.for_connectable(@block).order('id')
     assert_equal 1, conns.size
     assert_properties conns[0], :page => @page, :page_version => 2, :connectable => @block, :connectable_version => nil, :container => "main"
   end

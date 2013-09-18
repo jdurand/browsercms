@@ -5,6 +5,7 @@ require "rails/test_help"
 
 Rails.backtrace_cleaner.remove_silencers!
 
+require 'minitest/unit'
 # Load support files
 Dir["#{File.dirname(__FILE__)}/support/**/*.rb"].each { |f| require f }
 
@@ -22,6 +23,9 @@ require 'support/database_helpers'
 require 'factory_girl'
 require 'factories/factories'
 require 'factories/attachable_factories'
+
+# Silence warnings (hopefully) primarily from HTML parsing in functional tests.
+$VERBOSE = nil
 
 require 'support/engine_controller_hacks'
 
@@ -144,7 +148,7 @@ class ActiveSupport::TestCase
   end
 end
 
-ActionController::IntegrationTest.fixture_path = ActiveSupport::TestCase.fixture_path
+ActionDispatch::IntegrationTest.fixture_path = ActiveSupport::TestCase.fixture_path
 
 module Cms::ControllerTestHelper
   def self.included(test_case)

@@ -2,7 +2,6 @@ source 'http://rubygems.org'
 
 # Load this project as a gem.
 gemspec
-
 gem "mysql2"
 
 gem 'yard', :groups=>[:development, :test]
@@ -16,21 +15,17 @@ group :production do
   gem 'uglifier'
 end
 
-group :assets do
-  gem 'sass-rails'
-  gem 'bootstrap-sass'
-end
-
-
 group :development do
-  gem 'rake', '~> 0.9.5'
+  gem 'rake'
 end
 group :test, :development do
   gem 'minitest'
   gem 'minitest-rails'
+  gem 'minitest-reporters'
 end
 
 group :test do
+  gem 'poltergeist'
   gem 'm', '~> 1.2'
 
   gem 'factory_girl_rails', '3.3.0'
@@ -38,9 +33,9 @@ group :test do
   gem "sqlite3-ruby", :require => "sqlite3"
 
   # Cucumber and dependencies
-  gem 'capybara', '~>1.1'
+  gem 'capybara'
   gem 'database_cleaner'
-  gem 'cucumber-rails', require: false
+  gem 'cucumber-rails', :require=> false
   gem 'cucumber'
   gem 'launchy'
   gem 'ruby-prof'

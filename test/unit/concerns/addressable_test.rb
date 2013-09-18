@@ -9,7 +9,7 @@ end
 
 class HasSelfDefinedPath < ActiveRecord::Base
   is_addressable(no_dynamic_path: true)
-  attr_accessible :path
+ #attr_accessible :path
 end
 
 class IsAddressable < ActiveRecord::Base;
@@ -42,7 +42,6 @@ describe Cms::Concerns::Addressable do
   let(:addressable) { IsAddressable.new }
   describe '#is_addressable' do
     it "should have parent relationship" do
-      WannabeAddressable.expects(:attr_accessible).at_least_once
       WannabeAddressable.expects(:has_one)
       WannabeAddressable.is_addressable
       WannabeAddressable.new.must_respond_to :parent
@@ -94,6 +93,15 @@ describe Cms::Concerns::Addressable do
     end
   end
 
+  describe ".destroy" do
+    it "should also delete the section node" do
+      add = IsAddressable.create(slug: "coke", parent_id: root_section)
+      before = Cms::SectionNode.count
+      add.destroy
+      (Cms::SectionNode.count - before).must_equal -1
+    end
+  end
+
   describe ".path" do
     it "should join #path and .slug" do
       addressable.expects(:slug).returns("one")
@@ -124,9 +132,14 @@ describe Cms::Concerns::Addressable do
 
   describe "#with_slug" do
 
+    it "return nil if no matching content exists" do
+      IsAddressable.with_slug("non-existant").must_be_nil
+    end
+
     it "should find content" do
       content = IsAddressable.create(slug: "coke", parent_id: root_section)
       found = IsAddressable.with_slug("coke")
+
       found.wont_be_nil
       found.must_equal content
     end
@@ -142,8 +155,14 @@ describe Cms::Concerns::Addressable do
 
   describe "#create" do
     it "should allow for both parent and slug to be saved" do
-      f = IsAddressable.create(parent_id: root_section.id, slug: "slug")
+      f = IsAddressable.create!(parent_id: root_section.id, slug: "slug")
       f.section_node.slug.must_equal "slug"
+    end
+
+    # @bug These fail due to section_nodes getting persisted (create_section_node)
+    it "#slug should be persisted" do
+      IsAddressable.create!(parent_id: root_section.id, slug: "coke")
+      Cms::SectionNode.where(node_type: 'IsAddressable').first.slug.wont_be_nil
     end
 
     it "should allow for both parent and slug to be saved in any order" do
@@ -164,11 +183,26 @@ describe Cms::Concerns::Addressable do
     end
   end
 
-  describe ".page_title" do
+  describe "#page_title" do
     it "should default to the name" do
       addressable.name = "Some Name"
       addressable.page_title.must_equal "Some Name"
     end
 
+  end
+
+  describe "#landing_page?" do
+    it "a resource won't ever be the landing page for the section'" do
+      addressable.landing_page?.must_equal false
+    end
+  end
+
+  describe "#ancestors" do
+    describe "without a parent" do
+      it "should have no ancestors" do
+        content = IsAddressable.create
+        content.ancestors.must_equal []
+      end
+    end
   end
 end

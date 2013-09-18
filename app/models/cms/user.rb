@@ -6,24 +6,31 @@ module Cms
     include Cms::Authentication::Model
 
     validates_presence_of :login
-    #validates_length_of       :login,    :within => 3..40
     validates_uniqueness_of :login, :case_sensitive => false
     validates_format_of :login, :with => /\A\w[\w\.\-_@]+\z/, :message => "use only letters, numbers, and .-_@ please."
 
     validates_presence_of :email
-    #validates_length_of       :email,    :within => 6..100 #r@a.wk
-    #validates_uniqueness_of   :email,    :case_sensitive => false
-    validates_format_of :email, :with => /^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i, :message => "should be an email address, ex. xx@xx.com"
-    attr_accessible :login, :email, :name, :first_name, :last_name, :password, :password_confirmation, :expires_at
+    # Rails 4 flagged the following as a security risk (multiline). Use a more generic version on next line.
+    #validates_format_of :email, :with => /^([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})$/i, :message => "should be an email address, ex. xx@xx.com"
+    validates_format_of :email, :with => /\A[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]+\z/, :message => "should be an email address, ex. xx@xx.com"
+
 
     has_many :user_group_memberships, :class_name => 'Cms::UserGroupMembership'
     has_many :groups, :through => :user_group_memberships, :class_name => 'Cms::Group'
     has_many :tasks, :foreign_key => "assigned_to_id", :class_name => 'Cms::Task'
 
-    scope :active, :conditions => ["expires_at IS NULL OR expires_at > ?", Time.now.utc]
-    scope :able_to_edit_or_publish_content,
-          :include => {:groups => :permissions},
-          :conditions => ["#{Permission.table_name}.name = ? OR #{Permission.table_name}.name = ?", "edit_content", "publish_content"]
+    scope :active, -> {where(["expires_at IS NULL OR expires_at > ?", Time.now.utc])}
+    def self.able_to_edit_or_publish_content
+      where(["#{Permission.table_name}.name = ? OR #{Permission.table_name}.name = ?", "edit_content", "publish_content"])
+        .includes({:groups => :permissions})
+        .references(:permissions)
+    end
+
+    extend DefaultAccessible
+
+    def self.permitted_params
+      super + [:password, :password_confirmation]
+    end
 
     def self.current
       Thread.current[:cms_user]
@@ -48,7 +55,7 @@ module Cms
     end
 
     def disable
-      if self.class.count(:conditions => ["expires_at is null and id != ?", id]) > 0
+      if self.class.where(["expires_at is null and id != ?", id]).count > 0
         self.expires_at = Time.now - 2.minutes
       else
         false
@@ -98,15 +105,15 @@ module Cms
     end
 
     def permissions
-      @permissions ||= Cms::Permission.find(:all, :include => {:groups => :users}, :conditions => ["#{User.table_name}.id = ?", id])
+      @permissions ||= Cms::Permission.where(["#{User.table_name}.id = ?", id]).includes({:groups => :users}).references(:users)
     end
 
     def viewable_sections
-      @viewable_sections ||= Cms::Section.find(:all, :include => {:groups => :users}, :conditions => ["#{User.table_name}.id = ?", id])
+      @viewable_sections ||= Cms::Section.where(["#{User.table_name}.id = ?", id]).includes(:groups => :users).references(:users)
     end
 
     def modifiable_sections
-      @modifiable_sections ||= Cms::Section.find(:all, :include => {:groups => [:group_type, :users]}, :conditions => ["#{Cms::User.table_name}.id = ? and #{GroupType.table_name}.cms_access = ?", id, true])
+      @modifiable_sections ||= Cms::Section.where(["#{Cms::User.table_name}.id = ? and #{GroupType.table_name}.cms_access = ?", id, true]).includes(:groups => [:group_type, :users]).references(:users,:groups)
     end
 
     # Expects a list of names of Permissions

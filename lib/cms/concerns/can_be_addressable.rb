@@ -8,11 +8,16 @@ module Cms
       # @params [Hash] options
       # @option options [String] :path The base path where instances will be placed.
       # @option options [String] :no_dynamic_path Set as true if the Record has a :path attribute managed as a column in the db. (Default: false)
+      # @option options [Symbol] :destroy_if Name of a custom method used to determine when this object should be destrotyed. Rather than dependant: destroy to determine if the section node should be destroyed when this object is.
       def is_addressable(options={})
         has_one_options = {as: :node, inverse_of: :node, class_name: 'Cms::SectionNode'}
-        if options[:dependent]
-          has_one_options[:dependent] = options[:dependent]
+        unless options[:destroy_if]
+          has_one_options[:dependent] = :destroy
+        else
+          before_destroy options[:destroy_if]
+          after_destroy :destroy_node
         end
+
         has_one :section_node, has_one_options
 
         include Cms::Concerns::Addressable
@@ -83,10 +88,13 @@ module Cms
           "#{self.path}/"
         end
 
-        # Find an addressable object with the given content type
+        # Find an addressable object with the given content type.
+        #
+        # @param [String] slug
+        # @return [Addressable] The content block with that slug (if it exists). Nil otherwise
         def with_slug(slug)
           section_node = SectionNode.where(slug: slug).where(node_type: self.name).first
-          section_node.node
+          section_node ? section_node.node : nil
         end
 
         # Returns the layout (Page Template) that should be used to render instances of this content.
@@ -126,12 +134,12 @@ module Cms
         end
 
         def self.included(klass)
-          klass.attr_accessible :slug
+          #klass.attr_accessible :slug
         end
       end
 
       def self.included(model_class)
-        model_class.attr_accessible :parent, :parent_id
+        #model_class.attr_accessible :parent, :parent_id
       end
 
       # Returns all classes which need a custom route to show themselves.
@@ -139,11 +147,24 @@ module Cms
         descendants.select { |klass| klass.path != nil }
       end
 
-      # Returns all classes which inherit from Cms::Concerns::Addressable
+      # List of all classes that can be in the sitemap.
+      #
+      # @return [Array<Class>] Returns all classes which inherit from Cms::Concerns::Addressable
       def self.descendants
         ObjectSpace.each_object(::Class).select { |klass| klass < Cms::Concerns::Addressable }
       end
 
+      # Allows for manual destruction of node
+      def destroy_node
+        node.destroy
+      end
+
+      # Whether or not this content is the 'landing' page for its section.
+      #
+      # @return [Boolean] false always, since a content block won't ever be the landing page for the section
+      def landing_page?
+        false
+      end
 
       # Returns the value that will appear in the <title> element of the page when this content is rendered.
       # Subclasses can override this.
@@ -162,9 +183,10 @@ module Cms
       # Returns a list of all Addressable objects that are ancestors to this record.
       # @param [Hash] options
       # @option [Symbol] :include_self If this object should be included in the Array
-      # @return [Array<Addressable]
+      # @return [Array<Addressable>] Or [] if no ancestors and/or has no parent.
       #
       def ancestors(options={})
+        return [] unless node
         ancestor_nodes = node.ancestors
         ancestors = ancestor_nodes.collect { |node| node.node }
         ancestors << self if options[:include_self]
@@ -193,7 +215,7 @@ module Cms
         if node
           node.move_to_end(sec)
         else
-          build_section_node(:node => self, :section => sec)
+          build_section_node(:node_id => self.id, :section => sec)
         end
       end
 
@@ -225,7 +247,7 @@ module Cms
       module DeprecatedPageAccessors
 
         def self.included(model_class)
-          model_class.attr_accessible :section_id, :section
+          #model_class.attr_accessible :section_id, :section
         end
 
         include LeafNode

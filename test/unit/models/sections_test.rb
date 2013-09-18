@@ -7,6 +7,10 @@ module Cms
       @root = create(:root_section)
     end
 
+    test ".permitted_params allows mass assignment of :group_ids" do
+      assert Cms::Section.permitted_params.include?({group_ids: []})
+    end
+
     test "prepending_path" do
       assert_equal "/", Section.new(:path => "/").prependable_path
       assert_equal "/system/", Section.new(:path => "/system").prependable_path
@@ -170,7 +174,7 @@ module Cms
 
     def test_new_section_with_groups
       section = Cms::Section.new(:allow_groups => :all)
-      assert_equal Cms::Group.all, section.groups
+      assert_equal Cms::Group.all.to_a, section.groups.to_a
 
     end
 

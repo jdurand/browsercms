@@ -1,21 +1,22 @@
 <%
-   page = node
-   status_icon = page.archived? ? :archived : page.status
-       first_level = in_first_level?(node)
+   data = {edit_path: url_for(block_path(object)),
+           configure_path: url_for(block_path(object, :edit)),
+           delete_path: url_for(block_path(object)),
+           type: object.class.name,
+           node_id: key.id,
+   }
+   data[:editable] = false unless @modifiable_sections.include?(parent)
+
 %>
-<%= sitemap_ul_tag(node) %>
-  <li>
-    <%= render :partial => "node", :locals => {
-        :node => node, 
-        :node_type => "page", 
-        :icon => action_icon(first_level ? :root_page : :page),
-        :hidden => page.hidden?,
-        :access_icon => status_icon(access_icon),
-        :published_status_icon => status_icon(status_icon),
-        :published_status_label => status_icon.to_s.titleize,
-        :edit_path => url_for(block_path(node)),
-        :configure_path => url_for(block_path(node, :edit)),
-        :parent => parent
-      } %>
-  </li>
-</ul>
+<li><%= tag "a", {href: "#",
+                  class: 'selectable',
+                  data: data},
+            true %>
+  <%= icon "th-list" %> <%= object.name %><%= protected_content_icon parent %>
+
+  <span class="span1">
+    <%= content_tag "i", "", class: access_icon %>
+    <%= status_tag(object) %>
+    </span>
+  </a>
+</li>

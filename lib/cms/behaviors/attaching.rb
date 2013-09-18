@@ -83,7 +83,7 @@ module Cms
                                         :allow_destroy => true,
                                         # New attachments must have an uploaded file
                                         :reject_if => lambda { |a| a[:data].blank? && a[:id].blank? }
-          attr_accessible :attachments_attributes, :attachment_id_list, :attachments_changed
+         #attr_accessible :attachments_attributes, :attachment_id_list, :attachments_changed
 
           validates_associated :attachments
           before_validation :initialize_attachments, :check_for_updated_attachments
@@ -152,6 +152,14 @@ module Cms
 
       module ClassMethods
 
+        # Finds all instances of this Attaching content that exist in a given section.
+        # @param [Cms::Section] section
+        # @return [ActiveRecord::Relation] A relation that will return Attaching instances.
+        def by_section(section)
+          where(["#{SectionNode.table_name}.ancestry = ?", section.node.ancestry_path])
+            .includes(:attachments => :section_node)
+            .references(:section_nodes)
+        end
 
         # Defines an single attachement with a given name.
         #
@@ -199,7 +207,7 @@ module Cms
           found_versions = Cms::Attachment::Version.where(:attachable_id => attachable.id).
               where(:attachable_type => attachable.attachable_type).
               where(:attachable_version => version_number).
-              order(:version).all
+              order(:version).load
           found_attachments = []
 
           found_versions.each do |av|
@@ -369,7 +377,7 @@ module Cms
         end
 
         def initialize_attachments
-          attachments.each { |a| a.attachable_class = self.class.name }
+          attachments.each { |a| a.attachable_class = self.attachable_type }
         end
 
 

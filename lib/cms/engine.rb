@@ -5,7 +5,6 @@ require 'cms/version'
 require 'browsercms'
 
 require 'bootstrap-sass'
-
 # Gem name is different than file name
 # Must be required FIRST, so that our assets paths appear before its do.
 # This allows app/assets/ckeditor/config.js to set CMS specific defaults.
@@ -14,6 +13,12 @@ require 'ckeditor-rails'
 # Explicitly require this, so that CMS projects do not need to add it to their Gemfile
 # especially while upgrading
 require 'jquery-rails'
+
+require 'underscore-rails'
+require 'will_paginate'
+require 'will_paginate/active_record'
+require 'actionpack/page_caching'
+require 'panoramic'
 
 module Cms
 
@@ -46,6 +51,7 @@ module Cms
     # Set reasonable defaults
     # These default values can be changed by developers in their projects in their application.rb or environment's files.
     config.before_configuration do |app|
+      WillPaginate.per_page = 15
 
       # Default cache directories.
       app.config.cms.mobile_cache_directory = File.join(Rails.root, 'public', 'cache', 'mobile')

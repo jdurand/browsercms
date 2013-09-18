@@ -2,7 +2,7 @@ module Cms
   class Section < ActiveRecord::Base
     flush_cache_on_change
 
-    is_addressable no_dynamic_path: true
+    is_addressable no_dynamic_path: true, destroy_if: :deletable?
     # Cannot use dependent => :destroy to do this. Ancestry's callbacks trigger before the before_destroy callback.
     #   So sections would always get deleted since deletable? would return true
     after_destroy :destroy_node
@@ -14,18 +14,29 @@ module Cms
     VISIBLE_NODE_TYPES = [SECTION, PAGE, LINK]
     HIDDEN_NODE_TYPES = "Cms::Attachment"
 
-    include DefaultAccessible
-    attr_accessible :allow_groups, :group_ids, :name, :path, :root, :hidden
+    extend DefaultAccessible
+    # @override
+    def self.permitted_params
+      super + [:allow_groups, group_ids: []]
+    end
 
     has_many :group_sections, :class_name => 'Cms::GroupSection'
     has_many :groups, :through => :group_sections, :class_name => 'Cms::Group'
 
-    scope :root, :conditions => ['root = ?', true]
-    scope :system, :conditions => {:name => 'system'}
-    scope :hidden, :conditions => {:hidden => true}
-    scope :not_hidden, :conditions => {:hidden => false}
-    scope :named, lambda { |name| {:conditions => ["#{table_name}.name = ?", name]} }
-    scope :with_path, lambda { |path| {:conditions => ["#{table_name}.path = ?", path]} }
+    scope :root, -> {where( ['root = ?', true]  )}
+    scope :system, -> {where( {:name => 'system'}  )}
+    scope :hidden, -> {where( {:hidden => true}   )}
+    scope :not_hidden, -> {where( {:hidden => false}   )}
+
+    def self.named(name)
+      where(["#{table_name}.name = ?", name])
+    end
+
+    def self.with_path(path)
+      where(["#{table_name}.path = ?", path])
+    end
+    #scope :named, lambda { |name| {-> {where( ["#{table_name}.name = ?", name]} }   )}
+    #scope :with_path, lambda { |path| {-> {where( ["#{table_name}.path = ?", path]} }    )}
 
     validates_presence_of :name, :path
 
@@ -82,7 +93,7 @@ module Cms
     end
 
     def visible_child_nodes(options={})
-      children = child_nodes.of_type(VISIBLE_NODE_TYPES).fetch_nodes.in_order.all
+      children = child_nodes.of_type(VISIBLE_NODE_TYPES).fetch_nodes.in_order.to_a
       visible_children = children.select { |sn| sn.visible? }
       options[:limit] ? visible_children[0...options[:limit]] : visible_children
     end
@@ -129,11 +140,6 @@ module Cms
     # Callback to determine if this section can be deleted.
     def deletable?
       !root? && empty?
-    end
-
-    # Callback to clean up related nodes
-    def destroy_node
-      node.destroy
     end
 
     def editable_by_group?(group)

@@ -3,6 +3,17 @@ require 'test_helper'
 module Cms
   class CreatingPageTest < ActiveSupport::TestCase
 
+    test "#landing_page? if matches parent's path'" do
+      section = create(:section, path: "/about")
+      landing_page = create(:page, path: "/about", parent: section)
+      assert landing_page.landing_page?
+    end
+
+    test "home?" do
+      @page = create(:page, path: "/")
+      assert @page.home?
+    end
+
     test "Testing Database should be empty and have no pages" do
       assert_nil Cms::Page.with_path("/").first
     end
@@ -23,8 +34,10 @@ module Cms
       assert_equal 1, page.version
     end
 
-    test "Creating a page builds a section node" do
-      @page = Page.create!(:name => "Hello", :path => "/hello", :section => create(:root_section))
+    test "#create with :parent" do
+      parent = create(:root_section)
+      @page = Page.create!(:name => "Hello", :path => "/hello")
+      @page.parent = parent
       assert_not_nil @page.section_node
     end
 
@@ -164,6 +177,13 @@ module Cms
       assert_not_equal(@page, @page2)
     end
 
+    test "Make a new page with a path shouldn't create section_node'" do
+      section = create(:section)
+      original_count =  Cms::SectionNode.count
+      Cms::Page.new(name: 'New', path: "/", parent: section)
+      assert_equal original_count, Cms::SectionNode.count, "Bug in can_be_addressable means its creating section_node as side effect"
+    end
+
     test "Find by live path should not located deleted blocks, even if they share paths with live ones" do
       @page = create(:page, :path => '/foo')
       @page.mark_as_deleted!
@@ -225,6 +245,16 @@ module Cms
         Cms::Page.find(page.id)
       end
 
+    end
+
+    test "#currently_connected_to" do
+      page = create(:page)
+      block = create(:html_block)
+
+      page.add_content(block)
+      page.publish!
+
+      assert_equal [page], Cms::Page.currently_connected_to(block).to_a
     end
 
     def test_adding_a_block_to_a_page_puts_page_in_draft_mode
@@ -485,7 +515,7 @@ module Cms
 
 
       # should leave the previous connectors untouched
-      @conns = @page.connectors.all(:conditions => ["page_version < 4"], :order => "id")
+      @conns = @page.connectors.where(["page_version < 4"]).order("id").to_a
 
       assert_equal 3, @conns.size
 
@@ -510,7 +540,7 @@ module Cms
           :connectable_version => 1
       }
 
-      @conns = @page.connectors.for_page_version(4).all(:order => "id")
+      @conns = @page.connectors.for_page_version(4).order("id").to_a
       assert_equal 3, @conns.size
 
       assert_properties @conns[0], {
@@ -586,7 +616,7 @@ module Cms
 
       assert_equal connector_count + 2, Cms::Connector.count
 
-      foo, bar = @page.reload.connectors.for_page_version(@page.draft.version).find(:all, :order => "#{Cms::Connector.table_name}.position")
+      foo, bar = @page.reload.connectors.for_page_version(@page.draft.version).order("#{Cms::Connector.table_name}.position")
 
       assert_properties foo, {
           :page => @page,
@@ -621,8 +651,8 @@ module Cms
 
     protected
     def remove_both_connectors!
-      @page.remove_connector(@page.connectors.for_page_version(@page.draft.version).first(:order => "#{Cms::Connector.table_name}.position"))
-      @page.remove_connector(@page.connectors.for_page_version(@page.draft.version).first(:order => "#{Cms::Connector.table_name}.position"))
+      @page.remove_connector(@page.connectors.for_page_version(@page.draft.version).order("#{Cms::Connector.table_name}.position").first)
+      @page.remove_connector(@page.connectors.for_page_version(@page.draft.version).order("#{Cms::Connector.table_name}.position").first)
     end
 
 
@@ -652,6 +682,7 @@ module Cms
       assert_equal [first_connector_for(@page, @block)], @page.current_connectors(:bar)
 
     end
+
     test ".contents finds all non-deleted content items for the current version of the page" do
       assert_equal [@conn.connectable], @page.contents
     end
@@ -667,7 +698,7 @@ module Cms
 
       assert_incremented page_version, @page.draft.version
 
-      conns = @page.connectors.for_page_version(@page.draft.version-1).all
+      conns = @page.connectors.for_page_version(@page.draft.version-1).to_a
       assert_equal 1, conns.size
 
       assert_properties conns.first, {
@@ -686,14 +717,14 @@ module Cms
       @conn2 = @page.create_connector(@block2, "bar")
       @conn3 = @page.create_connector(@block2, "foo")
       #Need to get the new connector that matches @conn2, otherwise you will delete an older version, not the latest connector
-      @conn2 = Cms::Connector.first(:conditions => {:page_id => @page.reload.id, :page_version => @page.draft.version, :connectable_id => @block2.id, :connectable_version => @block2.version, :container => "bar"})
+      @conn2 = Cms::Connector.where({:page_id => @page.reload.id, :page_version => @page.draft.version, :connectable_id => @block2.id, :connectable_version => @block2.version, :container => "bar"}).first
       @page.remove_connector(@conn2)
 
       page_version_count = Cms::Page::Version.count
       page_version = @page.draft.version
       page_connector_count = @page.connectors.for_page_version(@page.draft.version).count
 
-      @conn = Cms::Connector.first(:conditions => {:page_id => @page.reload.id, :page_version => @page.draft.version, :connectable_id => @block2.id, :connectable_version => @block2.version, :container => "foo"})
+      @conn = Cms::Connector.where({:page_id => @page.reload.id, :page_version => @page.draft.version, :connectable_id => @block2.id, :connectable_version => @block2.version, :container => "foo"}).first
       @page.remove_connector(@conn)
       @page.reload
 

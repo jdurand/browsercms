@@ -78,14 +78,14 @@ module Cms
 
     def create_draft_page_with_multiple_edits
       create_page
-      @page.update_attributes(:name => "V2", :publish_on_save=>false)
-      @page.update_attributes(:name => "V3", :publish_on_save=>false)
+      @page.update_attributes(:name => "V2", :publish_on_save => false)
+      @page.update_attributes(:name => "V3", :publish_on_save => false)
       reset(:page)
     end
 
     protected
     def create_page
-      @page = create(:page, :section => root_section, :name => "Test", :path => "test", :publish_on_save=>false)
+      @page = create(:page, :section => root_section, :name => "Test", :path => "test", :publish_on_save => false)
     end
 
   end
@@ -134,10 +134,10 @@ module Cms
     def test_create_permissions
       login_as(@user)
 
-      post :create, :section_id => @editable_section, :name => "Another editable page"
-      assert_response :success
+      post :create, :section_id => @editable_section, page: {:name => "Another editable page"}
+      assert_response 302
 
-      post :create, :section_id => @noneditable_section, :name => "Another non-editable page"
+      post :create, :section_id => @noneditable_section, page: {:name => "Another non-editable page"}
       assert_response 403
       assert_template "cms/shared/access_denied"
     end
@@ -153,14 +153,19 @@ module Cms
       assert_template "cms/shared/access_denied"
     end
 
-    def test_update_permissions
+    test "Admin can update pages" do
       login_as(@user)
 
       # Regular update
-      put :update, :id => @editable_page, :name => "Modified editable page"
+      put :update, :id => @editable_page, :page => {:name => "Modified editable page"}
       assert_response :redirect
+    end
 
-      put :update, :id => @noneditable_page, :name => "Modified non-editable page"
+    def test_update_permissions
+      login_as(@user)
+
+
+      put :update, :id => @noneditable_page, :page => {:name => "Modified non-editable page"}
       assert_response 403
       assert_template "cms/shared/access_denied"
 

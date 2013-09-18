@@ -12,9 +12,10 @@ Feature:
     """
     class Product < ActiveRecord::Base
       acts_as_content_block
+      content_module :products
     end
     """
-    And a file named "test/unit/product_test.rb" should exist
+    And a file named "test/models/product_test.rb" should exist
     And the file "app/controllers/cms/products_controller.rb" should contain:
     """
     class Cms::ProductsController < Cms::ContentBlockController
@@ -29,7 +30,6 @@ Feature:
     """
     class CreateProducts < ActiveRecord::Migration
       def change
-        Cms::ContentType.create!(:name => "Product", :group_name => "Product")
         create_content_table :products, :prefix=>false do |t|
           t.string :name
           t.string :price
@@ -58,6 +58,7 @@ Feature:
     """
     class Product < ActiveRecord::Base
       acts_as_content_block
+      content_module :products
       belongs_to :size
     end
     """
@@ -72,6 +73,7 @@ Feature:
     """
     class Product < ActiveRecord::Base
       acts_as_content_block
+      content_module :products
       belongs_to_category
     end
     """
@@ -91,7 +93,6 @@ Feature:
     """
     class CreateDogs < ActiveRecord::Migration
       def change
-        Cms::ContentType.create!(:name => "Dog", :group_name => "Dog")
         create_content_table :dogs, :prefix=>false do |t|
 
           t.timestamps

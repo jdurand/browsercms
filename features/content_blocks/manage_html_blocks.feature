@@ -10,17 +10,16 @@ Feature: Manage Html Blocks
       | Hello CMS |
     Given I request /cms/html_blocks
     Then the response should be 200
-    Then "Text" should be selected as the current Content Type
+    Then I should see a page with a header "List Text"
     And I should see the following content:
       | Hello CMS     |
-      | Include body? |
 
   Scenario: Save but not publish a New Block
     Given I request /cms/html_blocks/new
-    Then I should see a page titled "Add New Text"
+    Then I should see a page named "Add New Text"
     When I fill in "Name" with "Hello World"
     And I click on "Save"
-    Then I should see a page titled "Content Library / View Text"
+    Then I should see the View Text page
     And I should see the following content:
       | draft                   |
       | View Text 'Hello World' |
@@ -28,10 +27,10 @@ Feature: Manage Html Blocks
 
   Scenario: Publishing a New Block
     Given I request /cms/html_blocks/new
-    Then I should see a page titled "Add New Text"
+    Then I should see a page named "Add New Text"
     When I fill in "Name" with "Hello World"
     And I click on "Save And Publish"
-    Then I should see a page titled "Content Library / View Text"
+    Then I should see the View Text page
     And I should see the following content:
       | published               |
       | View Text 'Hello World' |
@@ -44,7 +43,7 @@ Feature: Manage Html Blocks
     When I request /cms/html_blocks/100/edit
     When I fill in "Name" with "Hello World"
     And I click on "Save And Publish"
-    Then I should see a page titled "Content Library / View Text"
+    Then I should see the View Text page
     And I should see the following content:
       | published               |
       | View Text 'Hello World' |

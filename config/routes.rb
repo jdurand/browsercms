@@ -2,18 +2,19 @@
 # There are other routes that will be added at the root of the site (i.e. /) which can
 #   be found in lib/cms/route_extensions.rb
 Cms::Engine.routes.draw do
+
+  get 'fakemap', to: 'section_nodes#fake'
   get '/content/:id/edit', :to=>"content#edit", :as=>'edit_content'
-  match '/dashboard', :to=>"dashboard#index", :as=>'dashboard'
-  match '/', :to => 'home#index', :as=>'home'
-  match '/sitemap', :to=>"section_nodes#index", :as=>'sitemap'
-  match '/content_library', :to=>"html_blocks#index", :as=>'content_library'
-  match '/administration', :to=>"users#index", :as=>'administration'
-  match '/logout', :to=>"sessions#destroy", :as=>'logout'
+  get '/dashboard', :to=>"dashboard#index", :as=>'dashboard'
+  get '/', :to => 'home#index', :as=>'home'
+  get '/sitemap', :to=>"section_nodes#index", :as=>'sitemap'
+  get '/content_library', :to=>"html_blocks#index", :as=>'content_library'
+  get '/administration', :to=>"users#index", :as=>'administration'
+  get '/logout', :to=>"sessions#destroy", :as=>'logout'
   get '/login', :to=>"sessions#new", :as=>'login'
   post '/login', :to=>"sessions#create"
 
-  match '/toolbar', :to=>"toolbar#index", :as=>'toolbar'
-  match '/content_types', :to=>"content_types#index", :as=>'content_types'
+  get '/toolbar', :to=>"toolbar#index", :as=>'toolbar'
 
   put "/inline_content/:content_name/:id", to: "inline_content#update", as: "update_inline_content"
   resources :page_components
@@ -56,17 +57,12 @@ Cms::Engine.routes.draw do
 
   resources :section_nodes do
     member do
-      put :move_before
-      put :move_after
-      put :move_to_beginning
-      put :move_to_end
-      put :move_to_root
+      put :move_to_position
     end
   end
 
   resources :attachments, :only=>[:show, :create, :destroy]
 
-  match '/content_library', :to=>'html_blocks#index', :as=>'content_library'
   content_blocks :html_blocks
   content_blocks :portlets
   post '/portlet/:id/:handler', :to=>"portlet#execute_handler", :as=>"portlet_handler"
@@ -76,13 +72,10 @@ Cms::Engine.routes.draw do
   content_blocks :category_types
   content_blocks :categories
   content_blocks :tags
-
-  match '/administration', :to => 'users#index', :as=>'administration'
-
   resources :users do
     member do
       get :change_password
-      put :update_password
+      patch :update_password
       put :disable
       put :enable
     end
@@ -99,7 +92,7 @@ Cms::Engine.routes.draw do
   get 'cache', :to=>'cache#show', :as=>'cache'
   delete 'cache', :to=>'cache#destroy'
 
-  match "/routes", :to => "routes#index", :as=>'routes'
+  get "/routes", :to => "routes#index", :as=>'routes'
 
 end
 

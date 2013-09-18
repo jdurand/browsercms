@@ -1,59 +1,3 @@
-// This CSS sheet is injected into the page when a CMS user is editing it.
-// All styles here should be very specific to avoid clashes with existing CSS from templates.
-
-// A Container in 'Preview' mode. It should be completely invisible to users.
-.cms-container-preview {
-  outline-color: #999;
-  outline-style: dashed;
-  outline-width: 0px;
-  position: relative;
-  height: auto;
-  display: inline;
-  margin: 0px;
-  padding: 0px;
-}
-
-.cms-container {
-  @extend .cms-container-preview;
-}
-// The 'Add Content' link that appears when containers are visible.
-.cms-add-content {
-
-}
-
-// Image button for editing a content area.
-.cms-edit-content-link {
-  right: 0;
-  height: 16px;
-  width: 16px;
-  position: absolute;
-  z-index: 999;
-  opacity:0.5;
-}
-
-.cms-edit-content-link:hover {
-  opacity:1;
-}
-
-.cms-move-up-content-link {
-  @extend .cms-edit-content-link;
-  right: 32px;
-}
-.cms-move-down-content-link {
-  @extend .cms-edit-content-link;
-  right: 16px;
-}
-
-.cms-remove-content-link{
-  @extend .cms-edit-content-link;
-  right:50px;
-}
-
-// *****************************************************************
-// Deprecated (pre 4.0)
-// The rest of these are the pre 4.0 UI controls and can be safely deleted after the UI revamp is complete.
-// *****************************************************************
-
 // Minimalist styles for page editing controls that are added to CMS pages in edit mode.
 image.cms-content-button {
   text-decoration: none;
@@ -65,7 +9,7 @@ image.cms-content-button {
 }
 
 a.cms-content-link {
-  text-decoration: none;
+  textdecoration: none;
   padding: 0 2px 0 0;
   background: none;
   margin: 0;
@@ -90,7 +34,6 @@ a.cms-content-status {
   background: image-url("cms/containers/beta.png") repeat-x 0 0;
 }
 
-// Deprecated (pre 4.0)
 .cms-inner-container {
   display: block;
   width: 100%;

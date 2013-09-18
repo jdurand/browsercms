@@ -4,7 +4,7 @@ Then /^a rails application named "([^"]*)" should exist$/ do |app_name|
   self.project_name = app_name
   check_directory_presence [project_name], true
   expect_project_directories %w{ app config db }
-  expect_project_files %w{script/rails Gemfile }
+  expect_project_files %w{bin/rails Gemfile }
 end
 
 Given /^a rails application named "([^"]*)" exists$/ do |name|
@@ -25,7 +25,7 @@ end
 Then /^a rails engine named "([^"]*)" should exist$/ do |engine_name|
   check_directory_presence [engine_name], true
   expect_project_directories %w{ app config lib }
-  expect_project_files ["script/rails", "Gemfile", "#{engine_name}.gemspec"]
+  expect_project_files ["bin/rails", "Gemfile", "#{engine_name}.gemspec"]
 end
 
 When /^BrowserCMS should be added the \.gemspec file$/ do
@@ -110,8 +110,9 @@ When /^it should seed the demo data$/ do
   # This output is ugly, but it verifies that seed data completely runs
 end
 
-When /^the file "([^"]*)" (#{SHOULD_OR_NOT}) contain:$/ do |file, should_or_not, partial_content|
-  check_file_content(file, partial_content, should_or_not)
+# Opposite of aruba step 'the file "x" should contain:'
+When /^the file "([^"]*)" should not contain:$/ do |file, partial_content|
+  check_file_content(file, partial_content, false)
 end
 
 When /^the correct version of Rails should be added to the Gemfile$/ do

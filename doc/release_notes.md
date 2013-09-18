@@ -7,6 +7,10 @@ This release includes the following features:
 * True In Context Editing - Editors can directly edit Html content and page titles using CKEditor's inline capability.
 * Addressable Content Blocks - Custom content blocks (i.e. Product, Event, News Articles) can be created directly as pages in the sitemap.
 * Refined Content API - Make content blocks closer in behavior to ActiveRecord.
+* Improved Template Storage - Templates stored in the database no longer need to be written out to the file system. This should make it easier to deploy CMS apps to Heroku.
+* Rails 4 Upgrade - BrowserCMS is now designed to work with Rail 4.0.
+* Portlet Descriptions [#619] - Portlets can now have a description that will be used to provide additional context when users are building/placing them.
+* No need to register Content Types [#621] - Content Blocks will automatically appear in the menus without needing to add them to the database.
 
 UI Redesign
 ----------
@@ -29,6 +33,7 @@ Users can now edit most HTML content directly in the page. Icons indicate the ar
 1. Editable Page titles - Page title can be edited directly from the header.
 1. Preview Page - Editors can now preview the page without a toolbar or editing controls.
 1. Non-incontext Content - Not all content makes sense to be inline editable (for example portlets). For these content types, the previous move/remove/edit links now float in the upper right hand corner of the content block.
+1. [#619] Add descriptions to portlets. Developers can customize these.
 
 Addressable Content Blocks
 --------------------------
@@ -55,10 +60,32 @@ Previously, calling .save on a block would save a draft copy, rather then updati
     @block.save_draft
 
 
+Registering Content Types
+-------------------------
+
+Content blocks no longer need to have a separate registration in the database to appear in menus.
+
+Defining a new content model should be sufficient to have it appear in the content library. To specify which module it should appear in, you can configure it like so:
+
+class Widget < ActiveRecord::Base
+  acts_as_content_block
+  content_module :acme
+end
+
+The content_types and content_type_groups tables have been removed as they are no longer necessary. If you don't want a block to appear in the menus, you can specify this via:
+
+class Widget < ActiveRecord::Base
+  acts_as_content_block content_module: false
+end
+
+
 Upgrading
 --------
 
 1. Editable Page Titles: In order to take advantage of the editable pages titles, templates need to use the new Template API Method: page_header(). Used rather that <%= page_title %> within h1/h2 etc, this will output an editable page title element for logging in users.
+2. match -> get: Update your config/routes.rb to change any use of 'match' to get or post for your controller.
+3. Install the deprecated finders and other gems to help with upgrade. Once you get rid of the deprecation warnings you can remove the gem.
+4. Content Types - If you have defined content blocks in custom group names, you should edit them to specify the module name. See 'Registering Content Types' above for details. You can delete any seeds that create content types. There will be a deprecation warning if you call save! or create! on ContentTypes.
 
 Deprecations
 ------------

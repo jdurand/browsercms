@@ -20,17 +20,17 @@ end
 
 class Publishable < ActiveRecord::Base
   is_publishable
-  attr_accessible :name
+ #attr_accessible :name
 end
 
 class Unpublishable < ActiveRecord::Base
-  attr_accessible :name
+ #attr_accessible :name
 
 end
 
 class PublishableBlock < ActiveRecord::Base
   acts_as_content_block
-  attr_accessible :name
+ #attr_accessible :name
 end
 
 class PublishableBlockTestCase < ActiveSupport::TestCase
@@ -69,14 +69,14 @@ class PublishableTestCase < ActiveSupport::TestCase
 
   def test_publish_on_save
     @object.publish_on_save = true
-    assert @object.save
+    assert @object.save!
     assert @object.reload.published?
   end
 
   def test_unpublishable
     @object = Unpublishable.new(:name => "New Record")
     assert !@object.publishable?
-    assert @object.save
+    assert @object.save!
     assert !@object.publishable?
   end
 

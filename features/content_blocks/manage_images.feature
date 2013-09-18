@@ -11,9 +11,7 @@ Feature: Manage Image Blocks
   Scenario: List Images
     When I visit /cms/image_blocks
     Then I should see a page titled "Content Library / List Images"
-    And I should see the following content:
-      | An LOL Cat Picture |
-    And I should see the section search filter
+    And the page content should contain "An LOL Cat Picture"
 
   Scenario: Edit an Image
     When I visit /cms/image_blocks/150/edit
@@ -57,7 +55,7 @@ Feature: Manage Image Blocks
     Given an image exists with two versions
     When I revert the image to version 1
     Then the image should be reverted to version 1
-    Then the image should be in draft mode
+    Then I should see it's draft mode
     And the image should be updated to version 3
 
 # This does not test actual file content, which it probably should

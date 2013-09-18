@@ -8,17 +8,22 @@ module Cms
     belongs_to :assigned_to, :class_name => 'Cms::User'
     belongs_to :page, :class_name => 'Cms::Page'
 
-    include DefaultAccessible
-    attr_accessible :assigned_by, :assigned_to, :page
+    extend DefaultAccessible
+   #attr_accessible :assigned_by, :assigned_to, :page
 
     after_create :mark_other_tasks_for_the_same_page_as_complete
     after_create :send_email
 
-    scope :complete, :conditions => ["completed_at is not null"]
-    scope :incomplete, :conditions => ["completed_at is null"]
+    scope :complete, ->{ where( ["completed_at is not null"])}
+    scope :incomplete, ->{ where( ["completed_at is null"])}
 
-    scope :for_page, lambda { |p| {:conditions => ["page_id = ?", p]} }
-    scope :other_than, lambda { |t| {:conditions => ["id != ?", t.id]} }
+    def self.for_page(p)
+      where(["page_id = ?", p])
+    end
+
+    def self.other_than(t)
+      where( ["id != ?", t.id])
+    end
 
     validates_presence_of :assigned_by_id, :message => "is required"
     validates_presence_of :assigned_to_id, :message => "is required"
@@ -36,7 +41,7 @@ module Cms
 
     protected
     def mark_other_tasks_for_the_same_page_as_complete
-      self.class.for_page(self.page_id.to_i).other_than(self).incomplete.all.each do |t|
+      self.class.for_page(self.page_id.to_i).other_than(self).incomplete.to_a.each do |t|
         t.mark_as_complete!
       end
     end
