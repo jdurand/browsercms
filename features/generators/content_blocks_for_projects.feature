@@ -52,6 +52,32 @@ Feature:
     mount_browsercms
     """
 
+  Scenario: Generated Dates
+    When I run `rails g cms:content_block product fresh_until:date`
+    Then the file "app/views/cms/products/_form.html.erb" should contain:
+    """
+    <%= f.input :fresh_until, as: :date_picker %>
+    """
+
+  Scenario: Html Content
+    When I run `rails g cms:content_block product content:html`
+    Then the file "app/views/cms/products/_form.html.erb" should contain:
+    """
+    <%= f.input :name, as: :cms_text_field %>
+    """
+    And the file "app/views/cms/products/_form.html.erb" should contain:
+    """
+    <%= f.input :content, as: :text_editor %>
+    """
+
+  # Date times should just be standard Rails widget
+  Scenario: Date Time
+    When I run `rails g cms:content_block sale runs_til:datetime`
+    Then the file "app/views/cms/sales/_form.html.erb" should contain:
+    """
+    <%= f.input :runs_til %>
+    """
+
   Scenario: With Belongs To
     When I run `rails g cms:content_block product size:belongs_to`
     Then the file "app/models/product.rb" should contain:
@@ -65,6 +91,10 @@ Feature:
     And a migration named "create_products.rb" should contain:
     """
     t.belongs_to :size
+    """
+    Then the file "app/views/cms/products/_form.html.erb" should contain:
+    """
+    <%= f.input :size %>
     """
 
   Scenario: With Categories
@@ -80,6 +110,10 @@ Feature:
     And a migration named "create_products.rb" should contain:
     """
     t.belongs_to :category
+    """
+    And the file "app/views/cms/products/_form.html.erb" should contain:
+    """
+    <%= f.association :category, collection: categories_for('Product') %>
     """
 
   Scenario: With Html attributes

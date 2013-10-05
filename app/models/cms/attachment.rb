@@ -39,6 +39,9 @@ module Cms
 
     class << self
 
+      def permitted_params
+        super + [:attachable_class, :data]
+      end
       # Makes file paths more URL friendly
       def sanitize_file_path(file_path)
         SANITIZATION_REGEXES.inject(file_path.to_s) do |s, (regex, replace)|
@@ -108,7 +111,6 @@ module Cms
       # @param [Class] block_class The class of a block which has an attachment.
       # @param [String] name_of_attachment The name of the attachment association (i.e. if was 'has_attachment :photos' then pass 'photo')
       # @param [Symbol] key The key for the value to be fetched (i.e. :styles)
-      #
       def configuration_value(block_class, name_of_attachment, key)
         class_definitions = definitions[block_class]
         if class_definitions == nil
