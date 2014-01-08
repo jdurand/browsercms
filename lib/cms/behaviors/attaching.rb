@@ -112,7 +112,7 @@ module Cms
           validate(options) do |record|
             record.attachments.each do |attachment|
               next unless attachment.attachment_name == name.to_s
-              record.errors.add_to_base(message) unless range.include?(attachment.data_file_size)
+              record.errors[:base] << message unless range.include?(attachment.data_file_size)
             end
           end
         end
@@ -133,7 +133,7 @@ module Cms
           validate(validation_options) do |record|
             attachments.each do |a|
               if !allowed_types.any? { |t| t === a.data_content_type } && !(a.data_content_type.nil? || a.data_content_type.blank?)
-                record.add_to_base(options[:message] || "is not one of #{allowed_types.join(', ')}")
+                record.errors[:base] << options[:message] || "is not one of #{allowed_types.join(', ')}" 
               end
             end
 
