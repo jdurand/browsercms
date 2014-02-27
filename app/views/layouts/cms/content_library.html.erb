@@ -78,7 +78,9 @@
                 <%= yield :functions %>
                 <br clear="all" />
               </div>
-              <div class="top_cap_content"></div>
+              <div class="top_cap_content">
+                <%= render :partial => 'layouts/cms/custom' %>
+              </div>
               <div id="content">
                 <div class="pad">
                   <%= yield %>
