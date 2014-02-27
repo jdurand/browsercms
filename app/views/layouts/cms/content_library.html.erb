@@ -79,7 +79,7 @@
                 <br clear="all" />
               </div>
               <div class="top_cap_content">
-                <%= render :partial => 'layouts/cms/custom' %>
+                <%= render :partial => "cms/content_block/#{@content_type.name.underscore}" rescue nil %>
               </div>
               <div id="content">
                 <div class="pad">
